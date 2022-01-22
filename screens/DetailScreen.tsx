@@ -1,6 +1,7 @@
-import React from 'react';
-import { StyleSheet, Text, View, Button } from 'react-native';
-import axios from 'axios';
+import React, { useCallback, useEffect, useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
+import axios from "axios";
+import { Button, Card } from "../components/ui";
 
 /**
  * ToDo: Feed the list using fetching data from a RESTful API
@@ -13,26 +14,44 @@ import axios from 'axios';
  * 💯 Handle loading and error scenarios, always
  */
 
-export default function ListScreen() {
+export default function ListScreen({ route, navigation }: any) {
   /* ToDo: Get the id param from the route */
-  const id = 'bitcoin';
-  const item = mockData.data;
+  const [item, setItem] = useState<any>();
+  const { id } = route.params;
+
+  const getAsset = useCallback(async () => {
+    try {
+      const { data } = await axios.get(
+        `https://api.coincap.io/v2/assets/${id}`
+      );
+      console.log(data.data);
+      setItem(data.data);
+    } catch (error) {
+      console.log(error);
+    }
+  }, []);
+
+  useEffect(() => {
+    getAsset();
+  }, []);
 
   return (
     <View style={styles.container}>
       {item ? (
-        <View>
-          <Text>itemId: {JSON.stringify(id)}</Text>
-          <Text>#{item.rank}</Text>
-          <Text>{item.symbol}</Text>
-          <Text>{item.name}</Text>
-          <Text>USD {item.priceUsd}</Text>
-          <Text>Last24 {item.changePercent24Hr}</Text>
-          <Text>Supply {item.supply}</Text>
-          <Text>Max Supply {item.maxSupply}</Text>
-          <Text>Market Cap Usd {item.marketCapUsd}</Text>
+        <View style={styles.content}>
+          <Card
+            detail
+            symbol={item.symbol}
+            name={item.name}
+            rank={item.rank}
+            value={item.priceUsd}
+            performance={item.changePercent24Hr}
+            supply={item.supply}
+            maxSupply={item.maxSupply}
+            marketCap={item.marketCapUsd}
+          />
 
-          <Button title="My Wallet" onPress={() => alert('Wallet')} />
+          <Button title="My Wallet" onPress={() => navigation.navigate("Wallet")} />
         </View>
       ) : (
         <Text>Loading</Text>
@@ -44,24 +63,16 @@ export default function ListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    display: "flex",
+    flexDirection: "column",
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "flex-start",
+  },
+  content: {
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
-
-const mockData = {
-  data: {
-    id: 'bitcoin',
-    rank: '1',
-    symbol: 'BTC',
-    name: 'Bitcoin',
-    supply: '17193925.0000000000000000',
-    maxSupply: '21000000.0000000000000000',
-    marketCapUsd: '119179791817.6740161068269075',
-    volumeUsd24Hr: '2928356777.6066665425687196',
-    priceUsd: '6931.5058555666618359',
-    changePercent24Hr: '-0.8101417214350335',
-    vwap24Hr: '7175.0663247679233209',
-  },
-};
